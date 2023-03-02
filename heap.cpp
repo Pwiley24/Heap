@@ -1,3 +1,9 @@
+/*
+ * This program creates a max heap to store up to 100 integers.
+ * Author: Paige Wiley
+ * Date: 3-2-23 
+ */
+
 #include <fstream>
 #include <iostream>
 #include <cmath>
@@ -9,7 +15,9 @@ using namespace std;
 void add(int number, int index, int (&heap)[102]);
 void swapNums(int &p, int &c, int (&heap)[102]);
 void print(int (&hash)[102], int current, int depth);
-
+void deleteRoot(int (&heap)[102]);
+void deleteAll(int (&heap)[102]);
+void swapDown(int (&heap)[102], int parent); 
 
 int main(){
   int heap[102]; //initial my heap
@@ -25,7 +33,7 @@ int main(){
 
   while(running){
   
-    cout << "Enter a command:" << endl;
+    cout << "Enter a command (ADD, DELETE, QUIT):" << endl;
     cin.get(command, 10);
     cin.ignore(10, '\n');
 
@@ -85,6 +93,19 @@ int main(){
 	cout << "index: " << index << endl;
 	add(number, index, heap);
       }
+
+    }else if(strcmp(command, "DELETE") == 0){ //deleting numbers
+      cout << "Delete ROOT or ALL?" << endl;
+      cin.get(command, 10);
+      cin.ignore(10, '\n');
+
+      if(strcmp(command, "ROOT") == 0){ //deleting the root 
+	deleteRoot(heap);
+      }else if(strcmp(command, "ALL") == 0){ //deleting all
+	deleteAll(heap);
+      }
+    }else if(strcmp(command, "QUIT") == 0){ //quit program
+      running = false;
     }
    
     if(heap[102] != NULL){//all slots filled
@@ -95,6 +116,60 @@ int main(){
 }
 
 
+void deleteRoot(int (&heap)[102]){
+  int lastIndex;
+  for(int i = 1; i < 102; i++){
+    if(heap[i] == NULL){ //reached end of heap
+      lastIndex = i-1;
+    }
+  }
+  cout << "Deleting... " << heap[1] << endl;
+  //swap last index value with first
+  heap[1] = heap[lastIndex];
+
+  //check up tree
+  swapDown(heap, 1);
+}
+
+void swapDown(int (&heap)[102], int parent){
+  //find largest child
+  int childIndex;
+  bool left = false;
+  if(heap[parent*2] > heap[parent*2 +1]){ //left is larger
+    childIndex = parent*2;
+    left = true;
+  }else{ //right is larger
+    childIndex = parent*2 +1;
+  }
+
+  //check if parent is larger
+  if(heap[parent] < heap[childIndex]){ //parent needs to swap
+    int hold;
+    hold = heap[parent];
+    heap[parent] = heap[childIndex];
+    heap[childIndex] = hold;
+
+    if(childIndex*2 < 102 &&
+       childIndex*2 != NULL &&
+       left == true){
+      swapDown(heap, childIndex);
+    }else if(childIndex*2+1 < 102 &&
+	     childIndex*2+1 != NULL &&
+	     left != true){ 
+      swapDown(heap, childIndex);
+    }
+  }
+}
+
+void deleteAll(int (&heap)[102]){
+  for(int i = 0; i < 102; i++){
+    cout << "Deleting... " << heap[i] << endl;
+    heap[i] = NULL;
+  }
+}
+
+    
+
 void add(int number, int index, int (&heap)[102]){
   //add number to the next open index
   //check its parent
@@ -102,20 +177,26 @@ void add(int number, int index, int (&heap)[102]){
   //if less done
   heap[index] = number;
   int parIndex = floor(index/2);
-
-  while(heap[parIndex] < number &&
-	parIndex != 0){ //parent is less - must be swapped
-    swapNums(parIndex, index, heap);
-  }
-  
+  swapNums(parIndex, index, heap);
 }
 
 void swapNums(int &p, int &c, int (&heap)[102]){
-  //switch the parent and child
-  int hold;
-  hold = heap[p];
-  heap[p] = heap[c];
-  heap[c] = hold;
+  if(heap[p] < heap[c] &&
+     heap[p] != 0){ //parent is less than child
+    int hold;
+    hold = heap[p]; //parent value
+    heap[p] = heap[c]; //parent value equals the child
+    heap[c] = hold; //child value equals the parent
+
+    //find the parent of the new parent 
+    int newP = floor(p/2);
+    cout << "old parent " << p << endl;
+    cout << "new parent " << newP << endl;
+    if(heap[p] != 0){ //not at the first index
+      cout << "recursion" << endl;
+      swapNums(newP, p, heap);
+    }
+  }
 }
 
 
@@ -123,24 +204,20 @@ void swapNums(int &p, int &c, int (&heap)[102]){
 
 
 void print(int (&hash)[102], int current, int depth){
-  if((current*2 +1) != NULL){
+  if(hash[current*2 +1] != NULL &&
+     current < 50){
     print(hash, (current*2 +1), (depth + 1));
   }
   for(int i = 0; i < depth; i++){
     cout << '\t';
   }
-  cout << current << endl;
+  cout << hash[current] << endl;
 
-  if((current*2) != NULL){
+  if(hash[current*2] != NULL &&
+     current < 50){
     print(hash, (current*2), (depth +1));
   }
 }
 
-/*
-Heap Index:
-parent = index/2 (floor)
-left child = index*2
-right child = index*2+1
 
 
- */
